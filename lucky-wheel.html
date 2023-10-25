@@ -1,0 +1,280 @@
+<html>
+  <head>
+    <style>
+      html {
+        background: #dd7c7d;
+        font-family: sans-serif;
+      }
+      .center {
+        text-align: center;
+      }
+      .mt0 {
+        margin-top: 0px;
+      }
+      .pt20 {
+        padding-top: 20px;
+      }
+      .column-wrapper {
+        overflow:hidden;
+        margin: auto;
+        width: 800px;
+      }
+      .left-column {
+        float:left;
+        width: 380px;
+        min-height: 300px;
+        background: #ccc;
+        padding: 20px;
+        border-radius: 4px;
+      }
+      .right-column {
+        float:right;
+        width: 380px;
+        min-height: 320px;
+        position: relative;
+      }
+      .th-style {
+        width: 100px;
+        text-align: center;
+      }
+      .wheel-wrapper {
+        width: 300px;
+        height: 300px;
+        position: absolute;
+        top: 40%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .wheel-pointer {
+        width: 60px;
+        height: 60px;
+        border-radius: 1000px;
+        background: cyan;
+        border: 1px solid cyan;
+        position: absolute;
+        left: 50%;
+        top: 70%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        letter-spacing: 1px;
+        line-height: 60px;
+        z-index: 10;
+        cursor: pointer;
+
+        &::after {
+          content: "";
+          position: absolute;
+          top: -68px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 0;
+          height: 0;
+          border-left: 10px solid transparent;
+          border-right: 10px solid transparent;
+          border-bottom: 70px solid cyan;
+        }
+      }
+      .wheel-bg {
+        width: 100%;
+        height: 100%;
+        border-radius: 1000px;
+        overflow: hidden;
+        transition: transform 4s ease-in-out;
+
+        &.freeze {
+          transition: none;
+          background: red;
+        }
+      }
+
+      .prize-list {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        text-align: center;
+      }
+
+      .prize-item-wrapper {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 150px;
+        height: 150px;
+        font-size: 18px;
+        letter-spacing: 1px;
+      }
+
+      .prize-item {
+        width: 100%;
+        height: 100%;
+        transform-origin: bottom;
+
+        .prize-name {
+          padding: 16px 0;
+          z-index
+        }
+
+        .prize-icon {
+        }
+      }
+    </style>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  </head>
+  <body id="app" class="pt20">
+    <div class="column-wrapper">
+      <div class="left-column">
+        <h3 class="mt0">List Candidate</h3>
+        <form @submit.prevent="add()">
+          <input placeholder="New Name..." v-model="candidate" type="text" name="candidate"/>
+          <button type="submit" :disabled="candidateList.length > 12">Add</button>
+        </form>
+        <table border="0">
+          <tr>
+            <th>No</th>
+            <th class="th-style">Candidate</th>
+            <th class="th-style">Remove</th>
+            <th>Set as Winner<br/>
+              (Reset <input v-model="arranged" type="radio" :name="'radio'" :value="null"/>)</th>
+          </tr>
+          <tr v-for="(item, index) in candidateList">
+            <td>{{ index+1 }}</td>
+            <td>{{ item }}</td>
+            <td class="center"><button type="button" @click="remove(index)">Remove</button></td>
+            <td class="center"><input v-model="arranged" type="radio" :name="'radio'" :value="index"/></td>
+          </tr>
+        </table>
+      </div>
+      <div class="right-column">
+       <div class="wheel-wrapper">
+          <h3 class="center">The Winner is : 
+            <span style="text-transform: uppercase;">{{choosenCandidate}}</span></h3>
+          <div
+            class="wheel-pointer"
+            @click="onClickRotate"
+          >
+            START
+          </div>
+          <div
+            class="wheel-bg"
+            :class="{freeze: freeze}"
+            :style="[`transform: rotate(${wheelDeg}deg)`, `background: conic-gradient(${wheelBackground})`]"
+          >
+            <div class="prize-list" :style="`transform: rotate(${fixPosition}deg)`">
+              <div
+                class="prize-item-wrapper"
+                v-for="(item,index) in candidateList"
+                :key="index"
+              >
+                <div
+                  class="prize-item"
+                  :style="`transform: rotate(${(360/candidateList.length) * index}deg)`"
+                >
+                  <div class="prize-name">
+                    {{ item }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+<script>
+  const { createApp, ref } = Vue
+
+  createApp({
+    data() {
+      return {
+        arranged: null,
+        choosenCandidate: "...",
+        wheelBackground: "yellow 12.5%, lavenderblush 0deg, lavenderblush 37.5%, lawngreen 0deg, lawngreen 62.5%, lemonchiffon 0deg, lemonchiffon 87.5%, yellow 0deg, yellow 100%",
+        candidate: "",
+        freeze: false,
+        rolling: false,
+        wheelDeg: 0,
+        baseDeg: 0,
+        fixPosition: 0,
+        candidateList: [
+          "Salah",
+          "Jota",
+          "Nunez",
+          "Diaz"
+        ],
+        colors: [
+          "Lavender",
+          "LavenderBlush",
+          "LawnGreen",
+          "LemonChiffon",
+          "LightGray",
+          "LightBlue",
+          "LightCoral",
+          "LightCyan",
+          "LightGoldenRodYellow",
+          "LightGrey",
+          "LightGreen",
+          "LightPink",
+          "LightSalmon",
+          "LightSeaGreen",
+          "LightSkyBlue",
+          "LightSlateGray",
+          "LightSlateGrey",
+          "LightSteelBlue",
+          "PapayaWhip",
+          "PeachPuff"
+        ]
+      };
+    },
+    watch: {
+      'candidateList.length'(){
+        let max = this.candidateList.length
+        this.baseDeg = 100/max
+        let halfSliced = this.baseDeg/2
+        this.wheelBackground = `yellow ${halfSliced}%`
+        for(let i = 1; i < max; i++){
+          this.wheelBackground += `, ${this.colors[i]} 0 ${(this.baseDeg*i) + halfSliced}%`
+        }
+        this.wheelBackground += `, yellow 0 100%`
+      }
+    },
+    methods: {
+      randomColor(){
+        return this.colors[Math.floor(Math.random() * this.colors.length)]
+      },
+      add(){
+        this.candidateList.push(this.candidate)
+        this.candidate = ""
+      },
+      remove(index){
+        this.candidateList.splice(index, 1);
+      },
+      onClickRotate() {
+        this.choosenCandidate = "..."
+        if (this.rolling) {
+          return;
+        }
+
+        let result = Math.floor(Math.random() * this.candidateList.length);
+        if (this.arranged != null){
+          result = this.candidateList.length + this.arranged
+        }
+
+        this.roll(result);
+      },
+      roll(result) {
+        this.rolling = true;
+        const { wheelDeg, candidateList } = this;
+        this.wheelDeg = wheelDeg - (wheelDeg % 360) + (6 * 360) +
+          (360 - 360 / candidateList.length * result);
+        setTimeout(() => {
+          this.rolling = false;
+          this.choosenCandidate = candidateList[result]
+          if (this.arranged != null){
+            this.choosenCandidate = candidateList[this.arranged]
+          }
+        }, 4500);
+      }
+    }
+  }).mount('#app')
+</script>
